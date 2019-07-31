@@ -15,16 +15,6 @@
 # 2019/08/01
 #--------------------------------------------------------------------------------------
 
-# load(file = './output/Morris_For_Selection_Criteria.RData')
-# AEE <- subset(res, stat == 'mean' & indicator %in% c('catch', 'rec', 'ssb', 'f', 'tac'))
-# names(AEE)[c(4,6)] <- c('stock', 'AEE')
-# AEE <- cbind(AEE, outVar = paste(AEE$indicator, AEE$stock, sep = "_"))
-# 
-# AEE <- AEE[, c(3,1,7,2)]
-# names(AEE)[c(4)] <- c('AEE')
-# save(AEE, file = 'C:/Users/dgarcia/Dropbox/PhD_Dorleta/Papers/3_GSA_MethodOnly/revision_EMS/Algorithm/AEE.RData')
-
-
 # load ggplot2 library to build the barplots with the absolute elementary effects per output variable.
 library(ggplot2)
 
@@ -105,7 +95,13 @@ pp <- c(25, 50, 100, 150, 200, 250, 300)
 for(f in files){
 
   load(paste('C:/use/OneDrive - AZTI/Tesia/Sensitivity Analysis/output/', f, sep = ""))
-  save(bootmorris, file = paste('AEE_Boot_', pp[kkk], '.RData'))
+  
+  bootmorris <- cbind(bootmorris, outVar = paste(bootmorris$indicator, bootmorris$unit, sep = "_"))
+  bootmorris <- subset(bootmorris, stat == 'mean')
+  names(bootmorris)[2] <- 'AEE'
+  
+  bootmorris <- bootmorris[,c(3,1,8,2,7)]
+  save(bootmorris, file = paste('AEE_Boot_', pp[kkk], '.RData', sep = ""))
   kkk <- kkk+1
 
 }
