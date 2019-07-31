@@ -7,7 +7,8 @@
 #  Submitted to Environmental Modelling & Software. 
 #
 #  Functions in this script:
-#               - selection_criterion ~ arguments: AEE, K_EE, FVis
+#               - selection_criterion      ~ arguments: AEE,     K_EE, FVis
+#               - selection_criterion_boot ~ arguments: AEEboot, K_EE, FVis, wghts
 #
 #
 #
@@ -16,19 +17,13 @@
 # 2019/08/01
 #--------------------------------------------------------------------------------------
 
-selection_criterion <- function(AEE, K_EE, FVis){
+
+# ** selection criterion **
+selection_criteria_find_taus <- function(AEE, K_EE){
 
   # Name of output variables.
   outVar <- unique(AEE$outVar)
   
-  # Set of weights to be used in the weigthed criterion.
-  wgt_grid <- expand.grid(seq(0,1,0.01),seq(0,1,0.01),seq(0,1,0.01))
-  wgt_grid <- wgt_grid[which(rowSums(wgt_grid)==1),]
-  rownames(wgt_grid) <-  1:dim(wgt_grid)[1]
-
-  #  A list to store the selected factors for each set of weights in wgt_grid data frame.
-  factors_morris_wgt_grid <- vector('list', dim(wgt_grid)[1])
-  names(factors_morris_wgt_grid) <- paste(wgt_grid[,1],wgt_grid[,2], wgt_grid[,3], sep = "_")
 
   # FN, FH and FD: The objects where the selected factors will be stored. 
   FN <- FH <- FD <- NULL
@@ -39,7 +34,7 @@ selection_criterion <- function(AEE, K_EE, FVis){
   vjump  <- seq(0.0001,0.5, 0.001)  
   vpmax  <- seq(0.01,0.99,0.01)[length(seq(0.01,0.99,0.01)):1] 
 
-
+  
   # ** Number criterion: Find the tauN **
   flag     <- FALSE
   nfactors <- numeric(20)
@@ -122,12 +117,39 @@ selection_criterion <- function(AEE, K_EE, FVis){
   }
   FH <- unique(FH.)
 
+ 
+  return(list(tauN = tauN, tauH = tauH, tauD = tauD))
+}
+
+
+
+# ** selection criterion **
+selection_criterion <- function(AEE, K_EE, FVis){
+  
+  # Name of output variables.
+  outVar <- unique(AEE$outVar)
+  
+  # Set of weights to be used in the weigthed criterion.
+  wgt_grid <- expand.grid(seq(0,1,0.01),seq(0,1,0.01),seq(0,1,0.01))
+  wgt_grid <- wgt_grid[which(rowSums(wgt_grid)==1),]
+  rownames(wgt_grid) <-  1:dim(wgt_grid)[1]
+  
+  #  A list to store the selected factors for each set of weights in wgt_grid data frame.
+  factors_morris_wgt_grid <- vector('list', dim(wgt_grid)[1])
+  names(factors_morris_wgt_grid) <- paste(wgt_grid[,1],wgt_grid[,2], wgt_grid[,3], sep = "_")
+  
+  
   factors_morris_eye   <- NULL
   factors_morris_wgt <- NULL
-
+  
+  taus <- selection_criteria_find_taus(AEE, K_EE)
+  
+  tauN <- taus$tauN
+  tauH <- taus$tauH
+  tauD <- taus$tauD
   
   k <- 1
-
+  
   for(id in outVar){
     res0 <- subset(AEE, outVar == id)
     
@@ -142,28 +164,78 @@ selection_criterion <- function(AEE, K_EE, FVis){
     factors_morris_wgt_grid <- sapply(1:5151, function(x) c(factors_morris_wgt_grid[[x]],as.character(res0[1:fwgt_grid[x],1])))
     k <- k+1
   }
-
-
+  
+  
   factors_morris_eye  <- sort(unique(factors_morris_eye))
   factors_morris_wgt  <- sort(unique(factors_morris_wgt))
-
+  
   factors_morris_wgt_grid <- lapply(factors_morris_wgt_grid, function(x) sort(unique(x)))
   sapply(factors_morris_wgt_grid, function(x) length(x))
   wgt_grid <- cbind(wgt_grid, nfac = sapply(factors_morris_wgt_grid, function(x) length(x)),
-                  intersec = sapply(factors_morris_wgt_grid, function(x) length(intersect(factors_morris_eye, x))))
-
+                    intersec = sapply(factors_morris_wgt_grid, function(x) length(intersect(factors_morris_eye, x))))
+  
   # The maximum overlap with 'factors_morris_eye' with the minimum number of factors.
-  #wgt_grid <- wgt_grid[wgt_grid$nfac < 68,]
+  
   tt0 <- wgt_grid[which(wgt_grid$intersec==max(wgt_grid$intersec)) ,]
-
+  
   wgt_sel <- tt0[ which(tt0$nfac == min(tt0$nfac)), ]
-
+  
   wgt_sel[which.min(wgt_sel[,1]),]
-
+  
   sel_wgh <- as.numeric(names(which.min(rowSums((wgt_sel[,1:3]-1/3)^2))))[1]
-
-
+  
+  
   factors_morris_wgt <- factors_morris_wgt_grid[[sel_wgh]]
   
-  return(list(factors_wght = factors_morris_wgt, factors_vis = factors_morris_eye, weights = wgt_grid[sel_wgh,], tauN = tauN, tauH = tauH, tauD = tauD))
+  return(list(factors_wght = factors_morris_wgt, factors_vis = factors_morris_eye, 
+              weights = c(wN = wgt_grid[sel_wgh,1], wH = wgt_grid[sel_wgh,2], wD = wgt_grid[sel_wgh,3]), 
+              taus = c(tauN = tauN, tauH = tauH, tauD = tauD)))
 }
+
+
+# ** convergence_criterion **
+
+selection_criterion_boot <- function(AEEboot, K_EE, weights){
+  
+  outVar <- unique(AEEboot$outVar)
+  
+  iters <- unique(AEEboot$bootit)
+  
+  factors_boot <- list()
+  
+  for(b in iters){
+    cat('Bootstrap iteration: ', b,'\n')
+    AEE <- subset(AEEboot, bootit == b)
+    
+    taus <- selection_criteria_find_taus(AEE, K_EE)
+    
+    tauN <- taus$tauN
+    tauD <- taus$tauD
+    tauH <- taus$tauH
+    
+    wN <- weights['wN']
+    wD <- weights['wD']
+    wH <- weights['wH']
+    
+    factors_morris_wgt <- NULL
+    
+    for(id in outVar){
+      res0 <- subset(AEE, outVar == id)
+      
+      pos   <- which(res0$AEE > res0$AEE[1]*tauH)
+      fjump <- which(((res0$AEE[-dim(res0)[1]] - res0$AEE[-1])/max(res0$AEE)) < tauD)[1]-1
+      
+      # weighted mean grid.
+      fwgt <- round(wN*tauN + wD*length(pos) + wH*fjump)
+      factors_morris_wgt <- c(factors_morris_wgt,as.character(res0[1:fwgt,1]))
+      
+    }
+   
+    factors_boot[[b]] <- unique(factors_morris_wgt) 
+  }
+  
+  return(factors_boot)
+  
+}
+
+

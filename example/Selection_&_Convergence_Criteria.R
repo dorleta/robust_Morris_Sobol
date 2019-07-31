@@ -20,11 +20,11 @@ library(ggplot2)
 
 
 # Set the working directory
-wd <- "C:/Users/dgarcia/Dropbox/PhD_Dorleta/Papers/3_GSA_MethodOnly/revision_EMS/Algorithm/"
+wd <- "C:/use/GitHub/robust_Morris_Sobol/"
 setwd(wd)
 
 # Read the functions to with the selection and convergence criteria 
-source('./Garcia_2019_Selection_&_Convergence_Criteria_Functions.R')
+source('./code/Selection_&_Convergence_Criteria_Functions.R')
          
          
 #-----------------------------------------------------------------------------------
@@ -48,9 +48,9 @@ K_EE <- 50
 ##
 #------------------------------------------------------------------------------------
 
-load('AEE.RData')
+load('./example/AEE.RData')
 
-pdf('AEE.pdf')
+pdf('./example/AEE.pdf')
 for(id in unique(AEE$outVar)){
   x1 <- subset(AEE, outVar == id)
   x1 <- cbind(x1[order(x1$AEE, decreasing = TRUE),], ord = 135:1)[1:50,]
@@ -78,6 +78,9 @@ inpFactVis <- unique(unlist(lapply(names(Fvis), function(id)
 #-------------------------------------------------------------------------------------
 ## 2. SELECTION CRITERION
 ##      * Apply the  "selection_criterion" function.
+##      * In this step we calibrate the methos using the visual selection and obtain the weigths
+##        that we will use in the bootstrap to calculate the weighted criterion.
+##
 #----------------------------------------------------------------------------------------------------
 FM <- selection_criterion(AEE, K_EE, Fvis)
 
@@ -95,16 +98,17 @@ pp <- c(25, 50, 100, 150, 200, 250, 300)
 for(f in files){
 
   load(paste('C:/use/OneDrive - AZTI/Tesia/Sensitivity Analysis/output/', f, sep = ""))
-  
+
   bootmorris <- cbind(bootmorris, outVar = paste(bootmorris$indicator, bootmorris$unit, sep = "_"))
   bootmorris <- subset(bootmorris, stat == 'mean')
   names(bootmorris)[2] <- 'AEE'
-  
+
   bootmorris <- bootmorris[,c(3,1,8,2,7)]
-  save(bootmorris, file = paste('AEE_Boot_', pp[kkk], '.RData', sep = ""))
+  AEEboot <- bootmorris
+  save(AEEboot, file = paste('AEE_Boot_', pp[kkk], '.RData', sep = ""))
   kkk <- kkk+1
 
 }
 
-
-bootmorris
+load('./example/AEE_Boot_200.RData')
+res <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
