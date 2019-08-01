@@ -234,6 +234,8 @@ selection_criterion_boot <- function(AEEboot, K_EE, weights){
     factors_boot[[b]] <- unique(factors_morris_wgt) 
   }
   
+  factors_boot <- sort(table(unlist(factors_boot)), decreasing = TRUE)
+  
   return(factors_boot)
   
 }

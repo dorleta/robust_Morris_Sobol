@@ -17,6 +17,7 @@
 
 # load ggplot2 library to build the barplots with the absolute elementary effects per output variable.
 library(ggplot2)
+library(gridExtra)
 
 
 # Set the working directory
@@ -28,9 +29,12 @@ source('./code/Selection_&_Convergence_Criteria_Functions.R')
          
          
 #-----------------------------------------------------------------------------------
-## K_EE: The objective number of input factors to be selected.
+## Settings:
+##  - K_EE: The objective number of input factors to be selected.
 #-----------------------------------------------------------------------------------
-K_EE <- 50 
+K_EE  <- 20 
+Nboot <- 500
+alpha <- 0.95
 
 
 #-------------------------------------------------------------------------------------
@@ -50,24 +54,23 @@ K_EE <- 50
 
 load('./example/AEE.RData')
 
-pdf('./example/AEE.pdf')
+plots <- list()
 for(id in unique(AEE$outVar)){
   x1 <- subset(AEE, outVar == id)
   x1 <- cbind(x1[order(x1$AEE, decreasing = TRUE),], ord = 135:1)[1:50,]
   
-  p <- ggplot(x1,aes(x = factor(ord), y = AEE)) + geom_col() + coord_flip() +
+  plots[[id]] <- ggplot(x1,aes(x = factor(ord), y = AEE)) + geom_col() + coord_flip() +
     scale_x_discrete(breaks = x1$ord, labels = x1$name) +
     ggtitle(id)
-  print(p)
+
 }
-dev.off()
+
+
+grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
+
 
 # The number of factors selected in each output variable.
-Fvis <- c(ssb_HKE = 5,   ssb_HOM = 6,   ssb_MEG = 5,   ssb_LDB = 5,   ssb_MON = 5,   
-          rec_HKE = 3,   rec_HOM = 7,   rec_MEG = 6,   rec_LDB = 5,   rec_MON = 5,   
-          f_HKE = 2,     f_HOM = 8,     f_MEG = 4,     f_LDB = 5,     f_MON = 7,     
-          catch_HKE = 6, catch_HOM = 4, catch_MEG = 2, catch_LDB = 7, catch_MON = 3, 
-          tac_HKE = 7,   tac_HOM = 7,   tac_MEG = 5,   tac_LDB = 5,   tac_MON = 5)  
+Fvis <- c(ssb_HKE = 5,   ssb_HOM = 6,  f_HKE = 10,     f_HOM = 8, catch_HKE = 9, catch_HOM = 7)  
 
 # Identify the input factor selected with Fvis.
 inpFactVis <- unique(unlist(lapply(names(Fvis), function(id) 
@@ -78,7 +81,7 @@ inpFactVis <- unique(unlist(lapply(names(Fvis), function(id)
 #-------------------------------------------------------------------------------------
 ## 2. SELECTION CRITERION
 ##      * Apply the  "selection_criterion" function.
-##      * In this step we calibrate the methos using the visual selection and obtain the weigths
+##      * In this step we calibrate the method using the visual selection and obtain the weights
 ##        that we will use in the bootstrap to calculate the weighted criterion.
 ##
 #----------------------------------------------------------------------------------------------------
@@ -89,26 +92,62 @@ FM <- selection_criterion(AEE, K_EE, Fvis)
 ## 3. Convergence
 ##      * Apply the  "selection_criterion" function.
 #----------------------------------------------------------------------------------------------------
-files <- c("morris_25_convergence.RData", "morris_50_convergence.RData", "morris_100_convergence.RData",
-           "morris_150_convergence.RData", "morris_200_convergence.RData", "morris_250_convergence.RData",
-           "morris_300_convergence.RData")
 
-kkk <- 1
-pp <- c(25, 50, 100, 150, 200, 250, 300)
-for(f in files){
+load('./example/AEE_Boot_25.RData')
 
-  load(paste('C:/use/OneDrive - AZTI/Tesia/Sensitivity Analysis/output/', f, sep = ""))
+F25_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
 
-  bootmorris <- cbind(bootmorris, outVar = paste(bootmorris$indicator, bootmorris$unit, sep = "_"))
-  bootmorris <- subset(bootmorris, stat == 'mean')
-  names(bootmorris)[2] <- 'AEE'
+F25 <- names(F25_all[which(F25_all>=alpha*Nboot)])
+length(F25)
 
-  bootmorris <- bootmorris[,c(3,1,8,2,7)]
-  AEEboot <- bootmorris
-  save(AEEboot, file = paste('AEE_Boot_', pp[kkk], '.RData', sep = ""))
-  kkk <- kkk+1
 
-}
+load('./example/AEE_Boot_50.RData')
+
+F50_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
+
+F50 <- names(F50_all[which(F50_all>=alpha*Nboot)])
+length(F50)
+
+
+load('./example/AEE_Boot_100.RData')
+
+F100_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
+
+F100 <- names(F100_all[which(F100_all>=alpha*Nboot)])
+length(F100)
+
+
+load('./example/AEE_Boot_150.RData')
+
+F150_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
+
+F150 <- names(F150_all[which(F150_all>=alpha*Nboot)])
+length(F150)
+
 
 load('./example/AEE_Boot_200.RData')
-res <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
+
+F200_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
+
+F200 <- names(F200_all[which(F200_all>=alpha*Nboot)])
+length(F200)
+
+
+load('./example/AEE_Boot_250.RData')
+
+F250_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
+
+F250 <- names(F250_all[which(F250_all>=alpha*Nboot)])
+length(F250)
+
+
+
+load('./example/AEE_Boot_300.RData')
+F300_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
+
+F300 <- names(F300_all[which(F300_all>=alpha*Nboot)])
+length(F300)
+
+
+
+
