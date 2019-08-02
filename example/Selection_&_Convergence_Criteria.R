@@ -8,7 +8,7 @@
 #
 #  What it is needed to run this script:
 #
-#
+# The output of the morris method for several paths
 #
 #
 # Dorleta Garcia, Inmaculada Arostegui and Raul Prellezo
@@ -32,7 +32,7 @@ source('./code/Selection_&_Convergence_Criteria_Functions.R')
 ## Settings:
 ##  - K_EE: The objective number of input factors to be selected.
 #-----------------------------------------------------------------------------------
-K_EE  <- 20 
+K_EE  <- 15 
 Nboot <- 500
 alpha <- 0.95
 
@@ -52,47 +52,42 @@ alpha <- 0.95
 ##
 #------------------------------------------------------------------------------------
 
-load('./example/AEE.RData')
+######-----------------------------------------
+###    25 PATHS
+#####---------------------------------------------
 
+
+# 1. Visual selection of the input factors
+load('./example/AEE_25.RData')
+
+# Plot the 25 input factors with the highest AEE for each output variable.
 plots <- list()
 for(id in unique(AEE$outVar)){
   x1 <- subset(AEE, outVar == id)
-  x1 <- cbind(x1[order(x1$AEE, decreasing = TRUE),], ord = 135:1)[1:50,]
+  x1 <- cbind(x1[order(x1$AEE, decreasing = TRUE),], ord = 135:1)[1:25,]
   
   plots[[id]] <- ggplot(x1,aes(x = factor(ord), y = AEE)) + geom_col() + coord_flip() +
     scale_x_discrete(breaks = x1$ord, labels = x1$name) +
     ggtitle(id)
-
+  
 }
 
 
 grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
 
 
-# The number of factors selected in each output variable.
-Fvis <- c(ssb_HKE = 5,   ssb_HOM = 6,  f_HKE = 10,     f_HOM = 8, catch_HKE = 9, catch_HOM = 7)  
+# The number of factors selected for each output variable based on the visual inspection of the barplots.
+Nvis <- c(ssb_HKE = 3,   ssb_HOM = 2,  rec_HKE = 2,     rec_HOM = 4, catch_HKE = 4, catch_HOM = 3)  
 
-# Identify the input factor selected with Fvis.
-inpFactVis <- unique(unlist(lapply(names(Fvis), function(id) 
-                        as.character(subset(AEE, outVar == id)[1:Fvis[id],'name']))))
-
-
-
-#-------------------------------------------------------------------------------------
-## 2. SELECTION CRITERION
-##      * Apply the  "selection_criterion" function.
-##      * In this step we calibrate the method using the visual selection and obtain the weights
-##        that we will use in the bootstrap to calculate the weighted criterion.
-##
-#----------------------------------------------------------------------------------------------------
-FM <- selection_criterion(AEE, K_EE, Fvis)
+# Identify the input factor selected in the visual selection.
+Fvis <- unique(unlist(lapply(names(Nvis), function(id) 
+  as.character(subset(AEE, outVar == id)[1:Nvis[id],'name']))))
 
 
-#-------------------------------------------------------------------------------------
-## 3. Convergence
-##      * Apply the  "selection_criterion" function.
-#----------------------------------------------------------------------------------------------------
+## 2. Calibration of the selection criterion
+FM <- selection_criterion(AEE, K_EE, Nvis)
 
+## 3. Application of the selection criteria to the boostrap of the Morris method.
 load('./example/AEE_Boot_25.RData')
 
 F25_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
@@ -101,6 +96,43 @@ F25 <- names(F25_all[which(F25_all>=alpha*Nboot)])
 length(F25)
 
 
+
+
+######-----------------------------------------
+###    50 PATHS
+#####---------------------------------------------
+
+# 1. Visual selection of the input factors
+load('./example/AEE_50.RData')
+
+# Plot the 25 input factors with the highest AEE for each output variable.
+plots <- list()
+for(id in unique(AEE$outVar)){
+  x1 <- subset(AEE, outVar == id)
+  x1 <- cbind(x1[order(x1$AEE, decreasing = TRUE),], ord = 135:1)[1:25,]
+  
+  plots[[id]] <- ggplot(x1,aes(x = factor(ord), y = AEE)) + geom_col() + coord_flip() +
+    scale_x_discrete(breaks = x1$ord, labels = x1$name) +
+    ggtitle(id)
+  
+}
+
+
+grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
+
+
+# The number of factors selected for each output variable based on the visual inspection of the barplots.
+Nvis <- c(ssb_HKE = 5,   ssb_HOM = 4,  rec_HKE = 6,     rec_HOM = 6, catch_HKE = 5, catch_HOM = 3)  
+
+# Identify the input factor selected in the visual selection.
+Fvis <- unique(unlist(lapply(names(Nvis), function(id) 
+  as.character(subset(AEE, outVar == id)[1:Nvis[id],'name']))))
+
+
+## 2. Calibration of the selection criterion
+FM <- selection_criterion(AEE, K_EE, Nvis)
+
+## 3. Application of the selection criteria to the boostrap of the Morris method.
 load('./example/AEE_Boot_50.RData')
 
 F50_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
@@ -109,6 +141,44 @@ F50 <- names(F50_all[which(F50_all>=alpha*Nboot)])
 length(F50)
 
 
+
+
+
+######-----------------------------------------
+### 100 PATHS
+#####---------------------------------------------
+
+## 1. Visual selection of the input factors
+load('./example/AEE_100.RData')
+
+# Plot the 25 input factors with the highest AEE for each output variable.
+plots <- list()
+for(id in unique(AEE$outVar)){
+  x1 <- subset(AEE, outVar == id)
+  x1 <- cbind(x1[order(x1$AEE, decreasing = TRUE),], ord = 135:1)[1:25,]
+  
+  plots[[id]] <- ggplot(x1,aes(x = factor(ord), y = AEE)) + geom_col() + coord_flip() +
+    scale_x_discrete(breaks = x1$ord, labels = x1$name) +
+    ggtitle(id)
+  
+}
+
+
+grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
+
+
+# The number of factors selected for each output variable based on the visual inspection of the barplots.
+Nvis <- c(ssb_HKE = 1,   ssb_HOM = 4,  rec_HKE = 3,     rec_HOM = 4, catch_HKE = 2, catch_HOM = 2)  
+
+# Identify the input factor selected in the visual selection.
+Fvis <- unique(unlist(lapply(names(Nvis), function(id) 
+  as.character(subset(AEE, outVar == id)[1:Nvis[id],'name']))))
+
+
+## 2. Calibration of the selection criterion
+FM <- selection_criterion(AEE, K_EE, Nvis)
+
+## 3. Application of the selection criteria to the boostrap of the Morris method.
 load('./example/AEE_Boot_100.RData')
 
 F100_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
@@ -117,36 +187,50 @@ F100 <- names(F100_all[which(F100_all>=alpha*Nboot)])
 length(F100)
 
 
+
+
+######--------------------------------------------
+###       150 PATHS
+#####---------------------------------------------
+
+
+## 1. Visual selection of the input factors.
+load('./example/AEE_150.RData')
+
+# Plot the 25 input factors with the highest AEE for each output variable.
+plots <- list()
+for(id in unique(AEE$outVar)){
+  x1 <- subset(AEE, outVar == id)
+  x1 <- cbind(x1[order(x1$AEE, decreasing = TRUE),], ord = 135:1)[1:25,]
+  
+  plots[[id]] <- ggplot(x1,aes(x = factor(ord), y = AEE)) + geom_col() + coord_flip() +
+    scale_x_discrete(breaks = x1$ord, labels = x1$name) +
+    ggtitle(id)
+  
+}
+
+
+grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
+
+
+# The number of factors selected for each output variable based on the visual inspection of the barplots.
+Nvis <- c(ssb_HKE = 5,   ssb_HOM = 4,  rec_HKE = 6,     rec_HOM = 4, catch_HKE = 4, catch_HOM = 5)  
+
+# Identify the input factor selected in the visual selection.
+Fvis <- unique(unlist(lapply(names(Nvis), function(id) 
+  as.character(subset(AEE, outVar == id)[1:Nvis[id],'name']))))
+
+
+## 2. Calibration of the selection criterion
+FM <- selection_criterion(AEE, K_EE, Nvis)
+
+## 3. Application of the selection criteria to the boostrap of the Morris method.
 load('./example/AEE_Boot_150.RData')
 
 F150_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
 
 F150 <- names(F150_all[which(F150_all>=alpha*Nboot)])
 length(F150)
-
-
-load('./example/AEE_Boot_200.RData')
-
-F200_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
-
-F200 <- names(F200_all[which(F200_all>=alpha*Nboot)])
-length(F200)
-
-
-load('./example/AEE_Boot_250.RData')
-
-F250_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
-
-F250 <- names(F250_all[which(F250_all>=alpha*Nboot)])
-length(F250)
-
-
-
-load('./example/AEE_Boot_300.RData')
-F300_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
-
-F300 <- names(F300_all[which(F300_all>=alpha*Nboot)])
-length(F300)
 
 
 

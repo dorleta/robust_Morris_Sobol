@@ -7,8 +7,8 @@
 #  Submitted to Environmental Modelling & Software. 
 #
 #  Functions in this script:
-#               - selection_criterion      ~ arguments: AEE,     K_EE, FVis
-#               - selection_criterion_boot ~ arguments: AEEboot, K_EE, FVis, wghts
+#               - selection_criterion      ~ arguments: AEE,     K_EE, Nvis
+#               - selection_criterion_boot ~ arguments: AEEboot, K_EE, Nvis, wghts
 #
 #
 #
@@ -53,6 +53,7 @@ selection_criteria_find_taus <- function(AEE, K_EE){
     }
   
     nfactors[k] <- length(unique(FN))
+    if(k== 1 & nfactors[k] >= K_EE ) flag <- TRUE
     if(k > 1) if(nfactors[k] > K_EE & nfactors[k-1] <= K_EE) flag <- TRUE
   
     tauN <- tauN
@@ -124,7 +125,7 @@ selection_criteria_find_taus <- function(AEE, K_EE){
 
 
 # ** selection criterion **
-selection_criterion <- function(AEE, K_EE, FVis){
+selection_criterion <- function(AEE, K_EE, Nvis){
   
   # Name of output variables.
   outVar <- unique(AEE$outVar)
@@ -154,7 +155,7 @@ selection_criterion <- function(AEE, K_EE, FVis){
     res0 <- subset(AEE, outVar == id)
     
     # eye
-    factors_morris_eye  <- c(factors_morris_eye, as.character(res0[1:Fvis[id],1]))
+    factors_morris_eye  <- c(factors_morris_eye, as.character(res0[1:Nvis[id],1]))
     
     pos   <- which(res0$AEE > res0$AEE[1]*tauH)
     fjump <- which(((res0$AEE[-dim(res0)[1]] - res0$AEE[-1])/max(res0$AEE)) < tauD)[1]-1
