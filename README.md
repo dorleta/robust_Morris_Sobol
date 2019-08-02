@@ -1,6 +1,8 @@
 # robust_Morris_Sobol
 Code and examples to implement the criteria defined in "Robust combination of the Morris and Sobol methods in complex multidimensional models" by Dorleta Garcia, Inmaculada Arostegui and Raul Prellezo and show the results of the Morris and Sobol methods described in the paper.
 
+The contents of each of the folders in this repository are described below.
+
 ## code folder
 It contains the R functions needes to implement the selection and convergence criteria described in the paper "Robust combination of the Morris and Sobol methods in complex multidimensional models".
 
