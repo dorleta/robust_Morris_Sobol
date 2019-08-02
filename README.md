@@ -11,7 +11,7 @@ It contains an example of the application of the selection and convergence crite
 
 The files:
 
-* AEE.RData: A data frame with the output of the morris method with the absolute elementary effects (AEE) for each input factor and output variable. The dataframe must have at lest three columns 'inpFact', 'outVar' and 'AEE'. Each row corresponds with the aboslute elementary effect (AEE) of the input factor in column  'inpFact' for ouput variable in 'outVar' column.
+* AEE.RData: A data frame with the output of the morris method with the absolute elementary effects (AEE) for each input factor and output variable. The dataframe must have at lest three columns 'inpFact', 'outVar' and 'AEE'. Each row contains the absolute elementary effect (AEE) of the input factor in column  'inpFact' for ouput variable in 'outVar' column.
 
 
 | inpFact | outVar     | AEE |

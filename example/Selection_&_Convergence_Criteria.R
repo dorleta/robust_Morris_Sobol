@@ -1,35 +1,80 @@
 #--------------------------------------------------------------------------------------
-#  Implementation of the Selection and Convergence Criterion defined in :
+# 
+#       Implementation of the Selection and Convergence Criterion defined in :
 #    
-#        "Robust combination of the Morris and Sobol methods 
-#             in complex multidimensional models"
+#               "Robust combination of the Morris and Sobol methods 
+#                       in complex multidimensional models"
 #
-#  Submitted to Environmental Modelling & Software. 
+#               Submitted to Environmental Modelling & Software,
 #
-#  What it is needed to run this script:
+#          by Dorleta Garcia, Inmaculada Arostegui and Raul Prellezo 
 #
-# The output of the morris method for several paths
+#  
+#  ** What it is needed to run this script:
+#
+#   
+#       * The results of the morris methods  provided in a data frame with 3 columns: 
+#                      
+#                           | 'inpFact' | 'outVar' | 'AEE' | 
+#
+#          Each row contains with the absolute elementary effect (AEE) of the input 
+#          factor in column  'inpFact' for ouput variable in 'outVar' column.
+#
+#       * The results of a boostrap of the morris methods  provided in a data frame with 4 columns: 
+#
+#                          | 'inpFact' | 'outVar' | 'AEE' | 'bootit'|
+#         
+#         
+#
+#  ** Steps followed in the script: 
+#
+#      * The same steps are applied to the output of the morris method with different 
+#        number of trajectories, starting from the application with less number of  
+#        trajectories (25 trajectories in this case). The steps are replicated increasing the
+#        number of trajectories in the morris method until the number of factors 
+#        selected in more that alpha*Nboot iterations do not increase with the number of paths. 
+#        The morris method is not applied in this script so in reality in must be combined 
+#        with the functions in 'sensitivity' package,  personal code to calculate the elementary 
+#        effects or any form of implementation of the morris method.
 #
 #
-# Dorleta Garcia, Inmaculada Arostegui and Raul Prellezo
+#       
+#        1. For each output variable generate the barplot of the absolute elementary effects of
+#           each input factor.
+#        2. Using the barplots select the number of input factors per output variable that
+#           result in the selection of K_EE input factor.
+#        3. Calibrate the selection criteria using the visual selection performed in step 2 and 
+#           the base application of the morris method.
+#        4. 
+# 
+#        We create one plot per output variable (outVar) with the AEE of the 50 
+#        input factors with the highest AEE. The plots are stored in the working 
+#        directory with the name 'AEE.pdf'. 
+#      * Based on these plots, perform a visual selection that results in the 
+#        selection of K_EE factors.
+
+# 
 # 2019/08/01
-#--------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------
+
+
 
 # load ggplot2 library to build the barplots with the absolute elementary effects per output variable.
 library(ggplot2)
 library(gridExtra)
 
 
-# Set the working directory
+# Set the working directory.
 wd <- "C:/use/GitHub/robust_Morris_Sobol/"
 setwd(wd)
 
-# Read the functions  needed to implemente the criteria 
+# Read the functions  needed to implement the criteria stored in the 'code' folder of the GitHub repository. 
 source('./code/Selection_&_Convergence_Criteria_Functions.R')
          
          
-#-----------------------------------------------------------------------------------
-#  Settings:
+#----------------------------------------------------------------------------------------------------------
+#  0. GENERAL SETTINGS :
+##
 ##  - K_EE: The objective number of input factors to be selected.
 ##  - Nboot: Number of iterations in the boostrap.
 ##  - alpha: Proportion of iterations the factors need to be selected to keep them.
@@ -40,23 +85,9 @@ Nboot <- 500
 alpha <- 0.95
 
 
-#-------------------------------------------------------------------------------------
-## 1. VISUAL SELECTION
-##      
-##      * The results of morris methods are provided in a data frame in 4 columns: 
-##                      c('name', 'param', 'outVar', 'AEE') 
-##      * First we create a set of plots to summarize the results of the application 
-##        of the Morris method.
-##        We create one plot per output variable (outVar) with the AEE of the 50 
-##        input factors with the highest AEE. The plots are stored in the working 
-##        directory with the name 'AEE.pdf'. 
-##      * Based on these plots, perform a visual selection that results in the 
-##        selection of K_EE factors.
-##
-#------------------------------------------------------------------------------------
 
 ######-------------------------------------------------------------------------------
-###    25 PATHS
+###    25 TRAJECTORIES
 #####--------------------------------------------------------------------------------
 
 
@@ -102,7 +133,7 @@ length(F25)
 
 
 ######-------------------------------------------------------------------------------
-###    50 PATHS
+###    50 TRAJECTORIES
 ######-------------------------------------------------------------------------------
 
 # 1. Visual selection of the input factors
@@ -146,7 +177,7 @@ length(F50)
 
 
 ######-------------------------------------------------------------------------------
-### 100 PATHS
+### 100 TRAJECTORIES
 ######-------------------------------------------------------------------------------
 
 ## 1. Visual selection of the input factors
@@ -190,7 +221,7 @@ length(F100)
 
 
 ######-------------------------------------------------------------------------------
-###       150 PATHS
+###       150 TRAJECTORIES
 ######-------------------------------------------------------------------------------
 
 ## 1. Visual selection of the input factors.
