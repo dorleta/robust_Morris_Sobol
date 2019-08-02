@@ -1,26 +1,29 @@
 #--------------------------------------------------------------------------------------
 # 
-#       Implementation of the Selection and Convergence Criterion defined in :
-#    
-#               "Robust combination of the Morris and Sobol methods 
-#                       in complex multidimensional models"
-#
-#               Submitted to Environmental Modelling & Software,
-#
-#          by Dorleta Garcia, Inmaculada Arostegui and Raul Prellezo 
+#   |    Implementation of the Selection and Convergence Criterion defined in :   |
+#   |                                                                             |
+#   |            "Robust combination of the Morris and Sobol methods              |
+#   |                    in complex multidimensional models"                      | 
+#   |                                                                             |
+#   |            Submitted to Environmental Modelling & Software,                 | 
+#   |                                                                             |
+#   |       by Dorleta Garcia, Inmaculada Arostegui and Raul Prellezo             |
 #
 #  
 #  ** What it is needed to run this script:
 #
 #   
-#       * The results of the morris methods  provided in a data frame with 3 columns: 
+#       * The results of the morris method applied to a simulation model with 
+#         multidimensional output. The results need to provided in a data frame 
+#         with 3 columns: 
 #                      
 #                           | 'inpFact' | 'outVar' | 'AEE' | 
 #
-#          Each row contains with the absolute elementary effect (AEE) of the input 
-#          factor in column  'inpFact' for ouput variable in 'outVar' column.
+#          Each row contains the absolute elementary effect (AEE) of the input 
+#          factor in column 'inpFact' for ouput variable in 'outVar' column.
 #
-#       * The results of a boostrap of the morris methods  provided in a data frame with 4 columns: 
+#       * The results of a boostrap of the morris methods  provided in a data frame 
+#         with 4 columns: 
 #
 #                          | 'inpFact' | 'outVar' | 'AEE' | 'bootit'|
 #         
@@ -30,29 +33,26 @@
 #
 #      * The same steps are applied to the output of the morris method with different 
 #        number of trajectories, starting from the application with less number of  
-#        trajectories (25 trajectories in this case). The steps are replicated increasing the
-#        number of trajectories in the morris method until the number of factors 
-#        selected in more that alpha*Nboot iterations do not increase with the number of paths. 
-#        The morris method is not applied in this script so in reality in must be combined 
-#        with the functions in 'sensitivity' package,  personal code to calculate the elementary 
-#        effects or any form of implementation of the morris method.
-#
+#        trajectories (25 trajectories in this case). The steps are replicated 
+#        increasing the number of trajectories in the morris method until the  
+#        number of factors selected in more that alpha*Nboot iterations do not 
+#        increase with the number of trajectories.
+#        The morris method is not applied in this script so in reality in must 
+#        be combined with the functions in 'sensitivity' package,  personal code  
+#        to calculate the elementary effects or any form of implementation of the 
+#        morris method.
 #
 #       
 #        1. For each output variable generate the barplot of the absolute elementary effects of
 #           each input factor.
 #        2. Using the barplots select the number of input factors per output variable that
-#           result in the selection of K_EE input factor.
+#           result in the selection of K_EE input factors.
 #        3. Calibrate the selection criteria using the visual selection performed in step 2 and 
 #           the base application of the morris method.
-#        4. 
-# 
-#        We create one plot per output variable (outVar) with the AEE of the 50 
-#        input factors with the highest AEE. The plots are stored in the working 
-#        directory with the name 'AEE.pdf'. 
-#      * Based on these plots, perform a visual selection that results in the 
-#        selection of K_EE factors.
-
+#        4. Apply the selection criteria to the boostrap application of the Morris method and 
+#           identify the number of factors that have been selected in more than alpha*Nboot 
+#           of the iterations.
+#            
 # 
 # 2019/08/01
 #---------------------------------------------------------------------------------------------------------
@@ -90,11 +90,11 @@ alpha <- 0.95
 ###    25 TRAJECTORIES
 #####--------------------------------------------------------------------------------
 
-
-# 1. Visual selection of the input factors
 load('./example/AEE_25.RData')
 
-# Plot the 25 input factors with the highest AEE for each output variable.
+# 1. Generate the barplots with the absolute elementary effects.
+#    The 25 input factors with the highest AEE for each output variable.
+
 plots <- list()
 for(id in unique(AEE$outVar)){
   x1 <- subset(AEE, outVar == id)
@@ -106,11 +106,10 @@ for(id in unique(AEE$outVar)){
   
 }
 
-
 grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
 
 
-# The number of factors selected for each output variable based on the visual inspection of the barplots.
+# 2. Visual selection of the input factors. 
 Nvis <- c(ssb_HKE = 3,   ssb_HOM = 2,  rec_HKE = 2,     rec_HOM = 4, catch_HKE = 4, catch_HOM = 3)  
 
 # Identify the input factor selected in the visual selection.
@@ -118,10 +117,10 @@ Fvis <- unique(unlist(lapply(names(Nvis), function(id)
   as.character(subset(AEE, outVar == id)[1:Nvis[id],'name']))))
 
 
-## 2. Calibration of the selection criterion
+## 3. Calibration of the selection criterion
 FM <- selection_criterion(AEE, K_EE, Nvis)
 
-## 3. Application of the selection criteria to the boostrap of the Morris method.
+## 4. Application of the selection criteria to the boostrap of the Morris method.
 load('./example/AEE_Boot_25.RData')
 
 F25_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
@@ -136,10 +135,11 @@ length(F25)
 ###    50 TRAJECTORIES
 ######-------------------------------------------------------------------------------
 
-# 1. Visual selection of the input factors
 load('./example/AEE_50.RData')
 
-# Plot the 25 input factors with the highest AEE for each output variable.
+# 1. Generate the barplots with the absolute elementary effects.
+#    The 25 input factors with the highest AEE for each output variable.
+
 plots <- list()
 for(id in unique(AEE$outVar)){
   x1 <- subset(AEE, outVar == id)
@@ -151,11 +151,10 @@ for(id in unique(AEE$outVar)){
   
 }
 
-
 grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
 
 
-# The number of factors selected for each output variable based on the visual inspection of the barplots.
+# 2. Visual selection of the input factors. 
 Nvis <- c(ssb_HKE = 5,   ssb_HOM = 4,  rec_HKE = 6,     rec_HOM = 6, catch_HKE = 5, catch_HOM = 3)  
 
 # Identify the input factor selected in the visual selection.
@@ -163,10 +162,10 @@ Fvis <- unique(unlist(lapply(names(Nvis), function(id)
   as.character(subset(AEE, outVar == id)[1:Nvis[id],'name']))))
 
 
-## 2. Calibration of the selection criterion
+## 3. Calibration of the selection criterion
 FM <- selection_criterion(AEE, K_EE, Nvis)
 
-## 3. Application of the selection criteria to the boostrap of the Morris method.
+## 4. Application of the selection criteria to the boostrap of the Morris method.
 load('./example/AEE_Boot_50.RData')
 
 F50_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
@@ -180,10 +179,12 @@ length(F50)
 ### 100 TRAJECTORIES
 ######-------------------------------------------------------------------------------
 
-## 1. Visual selection of the input factors
 load('./example/AEE_100.RData')
 
-# Plot the 25 input factors with the highest AEE for each output variable.
+
+# 1. Generate the barplots with the absolute elementary effects.
+#    The 25 input factors with the highest AEE for each output variable.
+
 plots <- list()
 for(id in unique(AEE$outVar)){
   x1 <- subset(AEE, outVar == id)
@@ -199,7 +200,7 @@ for(id in unique(AEE$outVar)){
 grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
 
 
-# The number of factors selected for each output variable based on the visual inspection of the barplots.
+# 2. Visual selection of the input factors. 
 Nvis <- c(ssb_HKE = 1,   ssb_HOM = 4,  rec_HKE = 3,     rec_HOM = 4, catch_HKE = 2, catch_HOM = 2)  
 
 # Identify the input factor selected in the visual selection.
@@ -207,10 +208,10 @@ Fvis <- unique(unlist(lapply(names(Nvis), function(id)
   as.character(subset(AEE, outVar == id)[1:Nvis[id],'name']))))
 
 
-## 2. Calibration of the selection criterion
+## 3. Calibration of the selection criterion
 FM <- selection_criterion(AEE, K_EE, Nvis)
 
-## 3. Application of the selection criteria to the boostrap of the Morris method.
+## 4. Application of the selection criteria to the boostrap of the Morris method.
 load('./example/AEE_Boot_100.RData')
 
 F100_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
@@ -224,10 +225,11 @@ length(F100)
 ###       150 TRAJECTORIES
 ######-------------------------------------------------------------------------------
 
-## 1. Visual selection of the input factors.
 load('./example/AEE_150.RData')
 
-# Plot the 25 input factors with the highest AEE for each output variable.
+# 1. Generate the barplots with the absolute elementary effects.
+#    The 25 input factors with the highest AEE for each output variable.
+
 plots <- list()
 for(id in unique(AEE$outVar)){
   x1 <- subset(AEE, outVar == id)
@@ -243,7 +245,7 @@ for(id in unique(AEE$outVar)){
 grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]], ncol=2)
 
 
-# The number of factors selected for each output variable based on the visual inspection of the barplots.
+# 2. Visual selection of the input factors. 
 Nvis <- c(ssb_HKE = 5,   ssb_HOM = 4,  rec_HKE = 6,     rec_HOM = 4, catch_HKE = 4, catch_HOM = 5)  
 
 # Identify the input factor selected in the visual selection.
@@ -251,10 +253,10 @@ Fvis <- unique(unlist(lapply(names(Nvis), function(id)
   as.character(subset(AEE, outVar == id)[1:Nvis[id],'name']))))
 
 
-## 2. Calibration of the selection criterion
+## 3. Calibration of the selection criterion
 FM <- selection_criterion(AEE, K_EE, Nvis)
 
-## 3. Application of the selection criteria to the boostrap of the Morris method.
+## 4. Application of the selection criteria to the boostrap of the Morris method.
 load('./example/AEE_Boot_150.RData')
 
 F150_all <- selection_criterion_boot(AEEboot, K_EE, FM$weights)
