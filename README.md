@@ -37,3 +37,8 @@ The files:
 ## shiny folder 
 It contains the R scripts and the R data needed to generate a Shiny app with all the results from the application of Morris and Sobol method described in the paper "Robust combination of the Morris and Sobol methods in complex multidimensional models". To run it locally it is enough to run the RunApp.R script in an R session.
 
+## License
+Released under the [GPL v3](http://www.gnu.org/licenses/gpl-3.0.html).
+
+
+
